@@ -19,9 +19,9 @@ using namespace FFTMPI_NS;
 
 // FFT size 
 
-#define NFAST 128
-#define NMID 128
-#define NSLOW 128
+#define NFAST 512
+#define NMID 512
+#define NSLOW 512
 
 // precision-dependent settings 
 
@@ -31,7 +31,7 @@ int precision = 1;
 int precision = 2;
 #endif 
 
-#define ITERATIONS 5
+#define ITERATIONS 10
 // main program 
 
 int worst_64procs(MPI_Comm comm, MPI_Comm *newcomm){
@@ -270,6 +270,8 @@ int main(int narg, char **args)
   double elapsed, total_time[ITERATIONS];
   int inx = 0;
   // perform 2 FFTs
+  double fft_time = 0.0;
+  fft_time = MPI_Wtime();
 
   for (int i =0; i<ITERATIONS; i++){
     int n = 0;
@@ -290,12 +292,14 @@ int main(int narg, char **args)
     total_time[inx] = elapsed;
     inx ++;
   }
+  fft_time = MPI_Wtime() - fft_time;
 
   if (me == 0) {
     printf("Two %dx%dx%d FFTs per iteration on %d procs as %dx%dx%d grid, %d iterations\n",
            nfast,nmid,nslow,nprocs,npfast,npmid,npslow,ITERATIONS);
     for (inx = 0; inx<ITERATIONS; inx++)
       printf("CPU time, iter no. %d = %g secs\n",inx,total_time[inx]);
+    printf("Total FFT time = %lf\n",fft_time);
   } 
 
   // find largest difference between initial/final values
