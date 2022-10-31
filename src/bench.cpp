@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <vector>
+#include <string>
 //#include "comm_part.h"
 
 #include "fft3d.h" 
@@ -135,6 +137,7 @@ int inter_64procs(MPI_Comm comm, MPI_Comm *newcomm){
 
 }
 
+
 /* groups of nodes with 64 processes */
 int intrasock_nodes_64procs(MPI_Comm comm, MPI_Comm *newcomm, int comm_size, int nnodes){
     int key,rank,ret,rr,offset;
@@ -151,15 +154,24 @@ int intrasock_nodes_64procs(MPI_Comm comm, MPI_Comm *newcomm, int comm_size, int
     ret = MPI_Comm_split(comm, 0, key , newcomm);
     return ret;
 }
+
+std::vector<std::string> args_to_vec(int argc, char *argv[]){
+  std::vector<std::string> res;
+  for (int i =0; i!=argc; ++i) {
+    res.push_back(argv[i]);
+  }
+  return res;
+}
+
 int main(int narg, char **args)
 {
   // setup MPI 
   int partscheme = 0;
   MPI_Init(&narg,&args);
   MPI_Comm world;
-  if ( narg > 1 ){
-    partscheme = atoi(args[1]);
-  }
+  // if ( narg > 1 ){
+  //   partscheme = atoi(args[1]);
+  // }
   switch (partscheme) {
     case 0:
       world = MPI_COMM_WORLD;
@@ -220,11 +232,12 @@ int main(int narg, char **args)
 
   int nfast,nmid,nslow;
   int ilo,ihi,jlo,jhi,klo,khi; 
-
-  nfast = NFAST;
-  nmid = NMID;
-  nslow = NSLOW; 
-
+  std::vector<std::string> arguments = args_to_vec(narg,args);
+  nfast = std::stoi(args[1]);
+  nmid = std::stoi(args[2]);
+  nslow = std::stoi(args[3]);
+  if ( me == 0 )
+    std::cout << nfast << "x" << nmid << "x" << nslow << "\n";
   int ipfast = me % npfast;
   int ipmid = (me/npfast) % npmid;
   int ipslow = me / (npfast*npmid); 
