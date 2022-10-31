@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <vector>
+#include <queue>
+#include <string>
 //#include "comm_part.h"
 
 #include "fft3d.h" 
@@ -135,6 +138,7 @@ int inter_64procs(MPI_Comm comm, MPI_Comm *newcomm){
 
 }
 
+
 /* groups of nodes with 64 processes */
 int intrasock_nodes_64procs(MPI_Comm comm, MPI_Comm *newcomm, int comm_size, int nnodes){
     int key,rank,ret,rr,offset;
@@ -151,15 +155,24 @@ int intrasock_nodes_64procs(MPI_Comm comm, MPI_Comm *newcomm, int comm_size, int
     ret = MPI_Comm_split(comm, 0, key , newcomm);
     return ret;
 }
+
+std::queue<std::string> args_to_vec(int argc, char *argv[]){
+  std::queue<std::string> res;
+  for (int i =1; i!=argc; ++i) {
+    res.push(argv[i]);
+  }
+  return res;
+}
+
 int main(int narg, char **args)
 {
   // setup MPI 
   int partscheme = 0;
   MPI_Init(&narg,&args);
   MPI_Comm world;
-  if ( narg > 1 ){
-    partscheme = atoi(args[1]);
-  }
+  // if ( narg > 1 ){
+  //   partscheme = atoi(args[1]);
+  // }
   switch (partscheme) {
     case 0:
       world = MPI_COMM_WORLD;
@@ -219,12 +232,28 @@ int main(int narg, char **args)
   // partition grid into Npfast x Npmid x Npslow bricks
 
   int nfast,nmid,nslow;
-  int ilo,ihi,jlo,jhi,klo,khi; 
-
-  nfast = NFAST;
-  nmid = NMID;
-  nslow = NSLOW; 
-
+  int ilo,ihi,jlo,jhi,klo,khi;
+  int iterations = 10;
+  nfast = nmid = nslow = 32;
+  std::queue<std::string> arguments = args_to_vec(narg,args);
+  if (!arguments.empty()){
+    nfast = std::stoi(arguments.front());
+    arguments.pop();
+  }
+  if (!arguments.empty()){
+    nmid = std::stoi(arguments.front());
+    arguments.pop();
+  }
+  if (!arguments.empty()){
+    nslow = std::stoi(arguments.front());
+    arguments.pop();
+  }
+  if (!arguments.empty()){
+    iterations = std::stoi(arguments.front());
+    arguments.pop();
+  }
+  // if ( me == 0 )
+  //   std::cout << nfast << "x" << nmid << "x" << nslow << "\n";
   int ipfast = me % npfast;
   int ipmid = (me/npfast) % npmid;
   int ipslow = me / (npfast*npmid); 
@@ -267,13 +296,14 @@ int main(int narg, char **args)
   } 
 
 
-  double elapsed, total_time[ITERATIONS];
+  double elapsed;//total_time[ITERATIONS];
   int inx = 0;
+  std::vector<double> total_time;
   // perform 2 FFTs
   double fft_time = 0.0;
   fft_time = MPI_Wtime();
 
-  for (int i =0; i<ITERATIONS; i++){
+  for (int i =0; i<iterations; i++){
     int n = 0;
     for (int k = klo; k <= khi; k++) {
       for (int j = jlo; j <= jhi; j++) {
@@ -289,15 +319,15 @@ int main(int narg, char **args)
     fft->compute(work,work,1);        // forward FFT
     fft->compute(work,work,-1);       // backward FFT
     elapsed = MPI_Wtime()-elapsed;
-    total_time[inx] = elapsed;
+    total_time.push_back(elapsed);
     inx ++;
   }
   fft_time = MPI_Wtime() - fft_time;
 
   if (me == 0) {
     printf("Two %dx%dx%d FFTs per iteration on %d procs as %dx%dx%d grid, %d iterations\n",
-           nfast,nmid,nslow,nprocs,npfast,npmid,npslow,ITERATIONS);
-    for (inx = 0; inx<ITERATIONS; inx++)
+           nfast,nmid,nslow,nprocs,npfast,npmid,npslow,iterations);
+    for (inx = 0; inx<iterations; inx++)
       printf("CPU time, iter no. %d = %g secs\n",inx,total_time[inx]);
     printf("Total FFT time = %lf\n",fft_time);
   } 
