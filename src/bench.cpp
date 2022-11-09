@@ -156,13 +156,21 @@ int intrasock_nodes_64procs(MPI_Comm comm, MPI_Comm *newcomm, int comm_size, int
     return ret;
 }
 
+int rename_vsc5(MPI_Comm comm, MPI_Comm *newcomm,int numa_size,int nnumas){
+  int key,rank,ret;
+  MPI_Comm_rank(comm, &rank);
+  key = rank%numa_size*nnumas+rank/numa_size;
+  ret = MPI_Comm_split(comm, 0, key, newcomm);
+  return ret;
+}
+
 std::queue<std::string> args_to_vec(int argc, char *argv[]){
   std::queue<std::string> res;
   for (int i =1; i!=argc; ++i) {
     res.push(argv[i]);
   }
   return res;
-}
+ }
 
 int main(int narg, char **args)
 {
