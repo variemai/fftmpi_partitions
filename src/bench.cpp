@@ -186,7 +186,7 @@ int main(int narg, char **args)
       world = MPI_COMM_WORLD;
       break;
     case 1:
-      worst_64procs(MPI_COMM_WORLD, &world);
+      rename_vsc5(MPI_COMM_WORLD, &world, 16, 8);
       break;
     case 2:
       weird_64procs(MPI_COMM_WORLD, &world);
