@@ -501,7 +501,7 @@ void Remap3d::setup(int in_ilo, int in_ihi, int in_jlo, int in_jhi,
     #ifdef DEBUG
     if ( me == 0 ){
       std::cout << "Rank: " << me << " ngroup = " << ngroup << " processes: ";
-      for (i = 0; i < nprocs; ++i) {
+      for (i = 0; i < ngroup; ++i) {
         std::cout << pgroup[i] << ",";
       }
       std::cout << "\n";
