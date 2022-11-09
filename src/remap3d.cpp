@@ -487,9 +487,6 @@ void Remap3d::setup(int in_ilo, int in_ihi, int in_jlo, int in_jhi,
       }
       ngroup = ngroup_extra;
     }
-    #ifdef DEBUG
-    std::cout << "Rank: " << me << " ngroup = " << ngroup <<std::endl;
-    #endif
     // resize pgroup to final size
     // recreate sorted pgroup from pflag
 
@@ -501,6 +498,15 @@ void Remap3d::setup(int in_ilo, int in_ihi, int in_jlo, int in_jhi,
 
     memory->sfree(pflag);
 
+    #ifdef DEBUG
+    if ( me == 0 ){
+      std::cout << "Rank: " << me << " ngroup = " << ngroup << " processes: ";
+      for (i = 0; i < nprocs; ++i) {
+        std::cout << pgroup[i] << ",";
+      }
+      std::cout << "\n";
+    }
+    #endif
     // create all2all communicators for the remap
     // based on the group each proc belongs to
 
