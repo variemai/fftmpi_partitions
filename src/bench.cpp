@@ -166,7 +166,7 @@ int rename_vsc5(MPI_Comm comm, MPI_Comm *newcomm,int numa_size,int nnumas){
 
 std::queue<std::string> args_to_vec(int argc, char *argv[]){
   std::queue<std::string> res;
-  for (int i =1; i!=argc; ++i) {
+  for (int i =2; i!=argc; ++i) {
     res.push(argv[i]);
   }
   return res;
@@ -178,15 +178,15 @@ int main(int narg, char **args)
   int partscheme = 0;
   MPI_Init(&narg,&args);
   MPI_Comm world;
-  // if ( narg > 1 ){
-  //   partscheme = atoi(args[1]);
-  // }
+  if ( narg > 1 ){
+    partscheme = atoi(args[1]);
+  }
   switch (partscheme) {
     case 0:
       world = MPI_COMM_WORLD;
       break;
     case 1:
-      worst_64procs(MPI_COMM_WORLD, &world);
+      rename_vsc5(MPI_COMM_WORLD, &world, 16, 8);
       break;
     case 2:
       weird_64procs(MPI_COMM_WORLD, &world);
