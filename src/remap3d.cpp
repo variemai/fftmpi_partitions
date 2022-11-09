@@ -488,7 +488,7 @@ void Remap3d::setup(int in_ilo, int in_ihi, int in_jlo, int in_jhi,
       ngroup = ngroup_extra;
     }
     #ifdef DEBUG
-    std::cout << "Rank" << me << "ngroup = " << ngroup <<std::endl;
+    std::cout << "Rank: " << me << " ngroup = " << ngroup <<std::endl;
     #endif
     // resize pgroup to final size
     // recreate sorted pgroup from pflag
