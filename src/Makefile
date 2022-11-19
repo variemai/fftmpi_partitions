@@ -8,7 +8,7 @@ SHELL = /bin/sh
 # compiler/linker settings
 # ----------------------------------------
 
-CC =		mpicxx
+CC =		$(PREP) mpicxx
 CCFLAGS =	-g -O3 
 SHFLAGS =	-fPIC
 ARCHIVE =       ar
