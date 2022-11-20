@@ -335,11 +335,21 @@ int main(int narg, char **args)
   if (me == 0) {
     printf("Two %dx%dx%d FFTs per iteration on %d procs as %dx%dx%d grid, %d iterations\n",
            nfast,nmid,nslow,nprocs,npfast,npmid,npslow,iterations);
-    for (inx = 0; inx<iterations; inx++)
-      printf("CPU time, iter no. %d = %g secs\n",inx,total_time[inx]);
-    printf("Total FFT time = %lf\n",fft_time);
-  } 
+  }
+  double *max_times, *tmp, ttime;
+  tmp = (double*) malloc ( sizeof(double)*iterations);
+  max_times= (double*) malloc ( sizeof(double)*iterations);
+  std::copy(total_time.begin(),total_time.end(),tmp);
 
+  MPI_Reduce(tmp, max_times, total_time.size(), MPI_DOUBLE, MPI_MAX, 0, world);
+  if ( me == 0 ){
+    ttime = 0;
+    for (inx = 0; inx<iterations; inx++){
+      printf("CPU time, iter no. %d = %g secs\n",inx,max_times[inx]);
+      ttime += max_times[inx];
+    }
+    printf("Total FFT time = %lf\nAverage FFT time = %lf\n",ttime,ttime/(double)iterations);
+  }
   // find largest difference between initial/final values
   // should be near zero 
 
@@ -363,6 +373,8 @@ int main(int narg, char **args)
   // clean up 
 
   free(work);
+  free(tmp);
+  free(max_times);
   delete fft;
   MPI_Finalize();
 } 
