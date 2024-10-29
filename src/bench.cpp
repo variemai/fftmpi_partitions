@@ -260,6 +260,9 @@ int main(int narg, char **args)
     iterations = std::stoi(arguments.front());
     arguments.pop();
   }
+
+  double fft_time = 0.0;
+  fft_time = MPI_Wtime();
   // if ( me == 0 )
   //   std::cout << nfast << "x" << nmid << "x" << nslow << "\n";
   int ipfast = me % npfast;
@@ -308,8 +311,6 @@ int main(int narg, char **args)
   int inx = 0;
   std::vector<double> total_time;
   // perform 2 FFTs
-  double fft_time = 0.0;
-  fft_time = MPI_Wtime();
 
   for (int i =0; i<iterations; i++){
     int n = 0;
@@ -329,26 +330,6 @@ int main(int narg, char **args)
     elapsed = MPI_Wtime()-elapsed;
     total_time.push_back(elapsed);
     inx ++;
-  }
-  fft_time = MPI_Wtime() - fft_time;
-
-  if (me == 0) {
-    printf("Two %dx%dx%d FFTs per iteration on %d procs as %dx%dx%d grid, %d iterations\n",
-           nfast,nmid,nslow,nprocs,npfast,npmid,npslow,iterations);
-  }
-  double *max_times, *tmp, ttime;
-  tmp = (double*) malloc ( sizeof(double)*iterations);
-  max_times= (double*) malloc ( sizeof(double)*iterations);
-  std::copy(total_time.begin(),total_time.end(),tmp);
-
-  MPI_Reduce(tmp, max_times, total_time.size(), MPI_DOUBLE, MPI_MAX, 0, world);
-  if ( me == 0 ){
-    ttime = 0;
-    for (inx = 0; inx<iterations; inx++){
-      printf("CPU time, iter no. %d = %g secs\n",inx,max_times[inx]);
-      ttime += max_times[inx];
-    }
-    printf("Total FFT time = %lf\nAverage FFT time = %lf\n",ttime,ttime/(double)iterations);
   }
   // find largest difference between initial/final values
   // should be near zero 
@@ -372,6 +353,26 @@ int main(int narg, char **args)
 
   // clean up 
 
+  fft_time = MPI_Wtime() - fft_time;
+
+  if (me == 0) {
+    printf("Two %dx%dx%d FFTs per iteration on %d procs as %dx%dx%d grid, %d iterations\n",
+           nfast,nmid,nslow,nprocs,npfast,npmid,npslow,iterations);
+  }
+  double *max_times, *tmp, ttime;
+  tmp = (double*) malloc ( sizeof(double)*iterations);
+  max_times= (double*) malloc ( sizeof(double)*iterations);
+  std::copy(total_time.begin(),total_time.end(),tmp);
+
+  MPI_Reduce(tmp, max_times, total_time.size(), MPI_DOUBLE, MPI_MAX, 0, world);
+  if ( me == 0 ){
+    ttime = 0;
+    for (inx = 0; inx<iterations; inx++){
+      printf("CPU time, iter no. %d = %g secs\n",inx,max_times[inx]);
+      ttime += max_times[inx];
+    }
+    printf("Total FFT time = %lf\nAverage FFT time = %lf\n",fft_time,ttime/(double)iterations);
+  }
   free(work);
   free(tmp);
   free(max_times);
